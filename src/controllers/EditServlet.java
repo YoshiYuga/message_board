@@ -38,7 +38,7 @@ public class EditServlet extends HttpServlet {
         Message m = em.find(Message.class, Integer.parseInt(request.getParameter("id")));
 
         em.close();
-
+        request.
         // メッセージ情報とセッションIDをリクエストスコープに登録
         request.setAttribute("message", m);
         request.setAttribute("_token", request.getSession().getId());
