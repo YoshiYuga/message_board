@@ -13,23 +13,35 @@ import javax.servlet.http.HttpServletResponse;
 import models.Message;
 import utils.DBUtil;
 
-@WebServlet("/create")
-public class CreateServlet extends HttpServlet {
+/**
+ * Servlet implementation class UpdateServlet
+ */
+@WebServlet("/update")
+public class UpdateServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    public CreateServlet() {
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public UpdateServlet() {
         super();
         // TODO Auto-generated constructor stub
     }
 
+    /**
+     * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+     */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String _token = request.getParameter("_token");
         if(_token != null && _token.equals(request.getSession().getId())) {
             EntityManager em = DBUtil.createEntityManager();
-            em.getTransaction().begin();
 
-            Message m = new Message();
+            // セッションスコープからメッセージIDを取得して
+            // 該当のIDのメッセージ１件のみをデータベースから取得
+            Message m = em.find(Message.class, (Integer)(request.getSession().getAttribute("message_id")));
 
+
+            // フォームの内容を各フィールドに上書き
             String title = request.getParameter("title");
             m.setTitle(title);
 
@@ -37,14 +49,17 @@ public class CreateServlet extends HttpServlet {
             m.setContent(content);
 
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-            m.setCreated_at(currentTime);
-            m.setUpdated_at(currentTime);
+            m.setUpdated_at(currentTime); // 更新日時のみ上書き
 
-            em.persist(m);
+            // データベースを更新
+            em.getTransaction().begin();
             em.getTransaction().commit();
-            request.getSession().setAttribute("flush", "登録が完了しました");
             em.close();
 
+            // セッションスコープ上不要になったデータを削除
+            request.getSession().removeAttribute("message_id");
+
+            // indexページへリダイレクト
             response.sendRedirect(request.getContextPath() + "/index");
         }
     }
